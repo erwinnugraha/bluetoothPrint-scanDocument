@@ -8,7 +8,7 @@ import {
   Platform
 } from 'react-native';
 import ImagePicker from 'react-native-image-picker';
-import Ocr from 'react-native-tesseract-ocr';
+import RNTesseractOcr from 'react-native-tesseract-ocr';
 import styles from './styles';
 
 const Button = (Platform.OS === 'android') ? TouchableNativeFeedback : TouchableOpacity;
@@ -20,8 +20,8 @@ const imagePickerOptions = {
   },
 };
 const tessOptions = {
-  whitelist: null,
-  blacklist: null
+  whitelist: '',
+  blacklist: ''
 };
 
 class ImagePickerScreen extends Component {
@@ -35,12 +35,11 @@ class ImagePickerScreen extends Component {
   }
 
   selectImage() {
-
     ImagePicker.showImagePicker(imagePickerOptions, (response) => {
       if (!response.didCancel) {
         const source = { uri: response.uri };
         this.setState({ imageSource: source });
-        this.extractText(response.uri);
+        this.extractText(response.path);
       }
       console.log('Image : ', response);
       
@@ -48,9 +47,20 @@ class ImagePickerScreen extends Component {
   }
 
   extractText(imgPath) {
-    Ocr.recognize(imgPath, 'LANG_INDONESIAN', tessOptions)
-    .then((res) => this.setState({ text: res }));
-    console.log('Extract : ', imgPath);
+    const lang = 'LANG_INDONESIAN';
+    const tessOptions = {
+        whitelist : null,
+        blacklist : null,
+    }
+    RNTesseractOcr.recognize(imgPath, lang, tessOptions)
+    .then((result) => {
+      this.setState({ ocrResult: result });
+      console.log("OCR Result: ", result);
+    })
+    .catch((err) => {
+      console.log("OCR Error: ", err);
+    })
+  .done();
   }
 
   render() {
